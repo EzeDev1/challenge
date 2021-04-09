@@ -12,51 +12,35 @@ import 'package:challenge/modelos.dart';
 
 /*Declaracion de variables*/
 
-const LIMIT = 200;
-int lng = 0;
+const LIMIT = 200; /* Limite de publicaciones del challenge */
 
-List<Publicacion> publicaciones_final = [];
-List<Publicacion> p = [];
-String busqueda = "";
+var f = NumberFormat.currency(locale: 'eu', decimalDigits: 0,name: ''); /* formato numero */
+List<Publicacion> publicaciones_final_filtradas = [];  /* Array de publicaciones filtrado que retorna el get */
+List<Publicacion> publicaciones_final = []; /* Array de publicaciones sin filtrar */
 
-List<String> condiciones = [];
-List<String> _filtrosActivos = [];
-Orden orden = Orden.relevantes;
-
-
-var f = NumberFormat.currency(locale: 'eu', decimalDigits: 0,name: '');
-
+List<String> _filtrosActivos = []; /* Filtros activos de condiciones (Usado, nuevo, etc) */
+Orden orden = Orden.relevantes; /* Orden en en que se inicializa el filtro de orden*/
+List<String> condiciones = [];  /* Condiciones */
+List<Tipo> tipos = []; /*Array de tipos de publicacion ( Clasica, Premium, etc) */
+String busqueda = "";  /* Texto de la busqueda */
+int rangoMinimo = 0;   /* Rango de precio minimo del filtro */
+int rangoMaximo = 0;   /* Ranco de precio maximo del filtro */
+String rango = '';    /* Texto con rangoMinimo y rangoMaximo */
 /**/
 
 class PublicacionesBloc {
 
-  /* Search bar */
+  /* Contador publicaciones SliverAppBar */
 
-
-  StreamController<String> _buscador = new BehaviorSubject<String>();
-  Stream<String> get buscador => _buscador.stream;
-
-///final _buscador = BehaviorSubject<String>();
-
-///Stream<String> get buscador => _buscador.stream.transform(ValidadorBuscador);
-
-///Function(String) get ChangeBuscador => _buscador.sink.add;
-
-///final ValidadorBuscador = StreamTransformer<String, String>.fromHandlers(
-///    handleData:(txt,sink){
-///     busqueda = txt;
-///     print(busqueda);
-///     sink.add("hola");
-///    }
-
-///);
-
+  StreamController<int> _publicacionesContador = new BehaviorSubject<int>();
+  Stream<int> get publicacionesContador => _publicacionesContador.stream;
   /**/
 
 
   /* Stream publicaciones */
     Stream<List<Publicacion>> get getPublicaciones async*{
-      print("ejecuto get publicaciones");
+      rango = "";
+
       while(publicaciones_final.length<LIMIT){
         final publicaciones =  await TraerPublicaciones(publicaciones_final.length);  /* Traigo publicaciones */
 
@@ -65,15 +49,18 @@ class PublicacionesBloc {
           if(condiciones.indexOf(p["condition"]) == -1 ){  /* Si la condición no está en el array condiciones lo agrego para armar la lista de checks */
             condiciones.add(p["condition"]);
           }
-          if(publicaciones_final.length == LIMIT)  /* Si en el array de publicaciones hay mas del limite no hago nada */
+
+          if(publicaciones_final.length == LIMIT)  /* Si en el array de publicaciones supero el limite no hago nada */
             break;
 
           publicaciones_final.add(
               Publicacion(
+                id: p["id"],
                 title: p["title"],
                 thumbnail: p["thumbnail"],
                 condition: p["condition"],
                 listing_type_id: p["listing_type_id"],
+
                 price: p["price"].toInt(),
                 available_quantity: p["available_quantity"],
                 sold_quantity: p["sold_quantity"],
@@ -82,29 +69,74 @@ class PublicacionesBloc {
         }
       }
 
-//      print(condiciones);
-      p = publicaciones_final;
+      publicaciones_final_filtradas = List.from(publicaciones_final);
 
-      print(busqueda);
 
-     if(busqueda!=''){
-       p = p.where((element) => element.title.contains(busqueda));
+  /* Orden de las publicaciones*/
+     switch(orden){
+       case Orden.relevantes: {
+         publicaciones_final_filtradas = publicaciones_final;
+       }
+       break;
+       case Orden.mayorprecio: {
+         publicaciones_final_filtradas.sort((a, b) => (b.price).compareTo(a.price));
+       }
+       break;
+       case Orden.menorprecio: {
+         publicaciones_final_filtradas.sort((a, b) => (a.price).compareTo(b.price));
+       }
+       break;
+       case Orden.menosvendidos: {
+         publicaciones_final_filtradas.sort((a, b) => (a.sold_quantity).compareTo(b.sold_quantity));
+       }
+       break;
+       case Orden.masvendidos: {
+         publicaciones_final_filtradas.sort((a, b) => (b.sold_quantity).compareTo(a.sold_quantity));
+       }
+       break;
      }
-      print(p);
 
-   ///   if(orden){
-   ///     //ordenamos p
-   ///     switch(orden){}
-   ///
-   ///   }
+  /* Busqueda con search*/
+      if(busqueda!=''){
+        publicaciones_final_filtradas =  publicaciones_final_filtradas.where((e) => e.title.toLowerCase().contains(busqueda)).toList();
+      }
+
+  /* Filtro de condiciones */
+      if(_filtrosActivos.isNotEmpty){
+        publicaciones_final_filtradas =  publicaciones_final_filtradas.where((e) => _filtrosActivos.contains(e.condition)).toList();
+      }
+
+  /* Rango de precio */
+
+      if(rangoMinimo > 0){
+        publicaciones_final_filtradas =  publicaciones_final_filtradas.where((e) => (e.price > rangoMinimo)).toList();
+        rango = "\$ "+f.format(rangoMinimo).toString()+" - ";
+      }
+
+      if(rangoMaximo > 0 ){
+        publicaciones_final_filtradas =  publicaciones_final_filtradas.where((e) => (e.price < rangoMaximo)).toList();
+        if(rangoMaximo!=10000000){
+          rango = rango + f.format(rangoMaximo).toString();
+        }
+      }
+
+  /* Actualizo los valores */
+      _publicacionesContador.add(publicaciones_final_filtradas.length);
+      _orden.add(orden);
 
 
-      yield p;
+      yield publicaciones_final_filtradas;
     }
 
   /**/
 
-  /* Orden EndDrawer*/
+  /* Rango precios en el subtitulo*/
+  Stream<String> get getRangoPrecios async*{
+        print("get"+rango);
+    yield rango;
+  }
+
+  /* Orden EndDrawer Radios*/
 
     StreamController<Orden> _orden = new BehaviorSubject<Orden>();
     Stream<Orden> get ordenStream => _orden.stream;
@@ -124,52 +156,6 @@ class PublicacionesBloc {
   /**/
 
 
-  /* Rango de precios */
-
-   final precioMin = BehaviorSubject<String>();
-   final precioMax = BehaviorSubject<String>();
-
-   Stream<String> get pMax => precioMax.stream.transform(ValidadorPMax);
-   Stream<String> get pMin => precioMin.stream.transform(ValidadorPMin);
-
-   Stream<bool> get validar => Rx.combineLatest2(pMax, pMin, (pMax, pMin) => true);
-
-   Function(String) get ChangepMax => precioMax.sink.add;
-   Function(String) get ChangepMin => precioMin.sink.add;
-
-   final ValidadorPMax = StreamTransformer<String, String>.fromHandlers(
-        handleData:(maximo,sink){
-          print(maximo);
-
-          // if(precio==0){
-          //   sink.addError("Tienes que agregar un precio");
-          // }else{
-          //   sink.add(precio);
-          // }
-        }
-    );
-    final ValidadorPMin = StreamTransformer<String, String>.fromHandlers(
-        handleData:(minimo,sink){
-         // final a = f.format(int.parse(minimo));
-         // sink.add("123");
-
-          // if(precio==0){
-          //   sink.addError("Tienes que agregar un precio");
-          // }else{
-
-          // }
-        }
-    );
-
-  /**/
-
-
-  /* Contador publicaciones SliverAppBar */
-
-    StreamController<int> _publicacionesContador = new BehaviorSubject<int>();
-    Stream<int> get publicacionesContador => _publicacionesContador.stream;
-  /**/
-
   /* Stream listen events */
 
     StreamController<PublicacionesBase> _input =BehaviorSubject();
@@ -180,16 +166,14 @@ class PublicacionesBloc {
 
 
   PublicacionesBloc(){
-    this.getPublicaciones.listen( ( productosList ) => this._publicacionesContador.add(productosList.length) );
-    //this.getPublicaciones.listen( ( filtros ) => this._filtros.add(_filtrosActivos));//
-    //this.getPublicaciones.listen( ( condicion ) => this._condiciones.add(condiciones));
-    //this.getPublicaciones.listen( ( b ) => this._buscador.add(busqueda));
+    this.getPublicaciones.listen( ( condicion ) => this._condiciones.add(condiciones));
 
      _input.stream.listen(Evento);
   }
 
   Evento(PublicacionesBase event) {
-    print(event);
+
+
     if(event is ActualizarFiltros){
 
       if(_filtrosActivos.contains(event.title)){
@@ -203,28 +187,64 @@ class PublicacionesBloc {
 
       print("Filtro condicion = "+_filtrosActivos.toString());
 
-      _output.add(_filtrosActivos);
     }
 
     if(event is ActualizarOrden){
+      orden = event.orden;
       _orden.add(event.orden);
     }
 
     if(event is Buscador){
-      print("EEEE"+event.busqueda);
-      busqueda = event.busqueda;
-      _buscador.add(event.busqueda);
+       print("Escribiendo: "+event.busqueda);
+
+       busqueda = event.busqueda;
     }
 
+    if(event is FiltrarPrecioMinimo){
+       rangoMinimo = event.preciominimo;
+       if(event.preciominimo==''){
+         rango = '';
+       }
+    }
+
+    if(event is FiltrarPrecioMaximo){
+      rangoMaximo = event.preciomaximo;
+    }
+
+    if(event is LimpiarFiltros){
+       rangoMaximo = 0;
+       rangoMinimo =  0;
+       orden = Orden.relevantes;
+       _filtrosActivos.clear();
+       rango = "";
+    }
   }
+
   dispose(){
     _publicacionesContador.close();
     _input.close();
     _output.close();
-     precioMin.close();
-     precioMax.close();
-    _buscador.close();
+    _orden.close();
+    _filtros.close();
   }
+
+  /* Stream Tipos */
+  Stream<List<Tipo>> get getTipos async*{
+
+    final t =  await TraerListaTipos();  /* Traigo los tipos */
+
+    for(dynamic p in t){
+          tipos.add(
+              Tipo(
+                  id: p["id"],
+                  name: p["name"],
+                )
+          );
+    }
+
+    yield tipos;
+  }
+
 }
 
 TraerPublicaciones(lng) async {
@@ -244,5 +264,18 @@ TraerPublicaciones(lng) async {
     } else {
       throw Exception('Fallo al traer las publicaciones');
     }
+}
+
+TraerListaTipos() async {
+
+  final response = await http.get('https://api.mercadolibre.com/sites/MLA/listing_types');
+
+  if (response.statusCode == 200 ) {
+
+    return jsonDecode(response.body);
+
+  } else {
+    throw Exception('Fallo al traer los tipos');
+  }
 }
 
