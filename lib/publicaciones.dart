@@ -86,7 +86,6 @@ class _PublicacionesState extends State<Publicaciones> {
 
                   ExpansionTile(
                     key: GlobalKey(),
-                    iconColor: Colors.blue,
                     title: Column(
                       children: [
                         Container(
@@ -118,20 +117,20 @@ class _PublicacionesState extends State<Publicaciones> {
 
                                 case Orden.mayorprecio: {
                                   textoOrden = "Mayor precio";
-                              }
-                              break;
+                                }
+                                break;
 
-                              case Orden.menosvendidos: {
-                                textoOrden = "Menos vendidos";
-                              }
-                              break;
+                                case Orden.menosvendidos: {
+                                  textoOrden = "Menos vendidos";
+                                }
+                                break;
 
-                              case Orden.masvendidos: {
-                                textoOrden = "Más vendidos";
-                              }
-                              break;
+                                case Orden.masvendidos: {
+                                  textoOrden = "Más vendidos";
+                                }
+                                break;
 
-                            }
+                              }
                               return  AutoSizeText(textoOrden,style: TextStyle(color: Colors.blue,fontSize: 12),);
                             },
                           ),
@@ -416,7 +415,6 @@ class _PublicacionesState extends State<Publicaciones> {
                           );
                         }
                         return  ExpansionTile(
-                          iconColor: Colors.blue,
                           title: Column(
                             children: [
                               Container(
@@ -449,7 +447,6 @@ class _PublicacionesState extends State<Publicaciones> {
                   ),
 
                   ExpansionTile(
-                    iconColor: Colors.blue,
                     title: Column(
                       children: [
                         Container(
@@ -467,13 +464,13 @@ class _PublicacionesState extends State<Publicaciones> {
                             stream: publicacionesBloc.getRangoPrecios.asBroadcastStream(),
                             builder: ( _ , AsyncSnapshot <String> _rango){
 
-                                final rango = _rango.data ?? [];
+                              final rango = _rango.data ?? [];
 
-                                  if(rango=="[]"){
-                                    print("xD");
-                                  }
+                              if(rango=="[]"){
+                                print("xD");
+                              }
 
-                                return AutoSizeText(rango.toString(),style: TextStyle(color: Colors.blue,fontSize: 12),);
+                              return AutoSizeText(rango.toString(),style: TextStyle(color: Colors.blue,fontSize: 12),);
                             },
                           ),
                         )
@@ -504,19 +501,19 @@ class _PublicacionesState extends State<Publicaciones> {
                                       ],
                                       onChanged: (min){
 
-                                          if(min==''){
-                                            rangominimo.text = "0";
-                                          }
+                                        if(min==''){
+                                          rangominimo.text = "0";
+                                        }
 
-                                           publicacionesBloc.activarEvento.add(FiltrarPrecioMinimo(preciominimo: int.parse(rangominimo.text.replaceAll(',', ''))));
+                                        publicacionesBloc.activarEvento.add(FiltrarPrecioMinimo(preciominimo: int.parse(rangominimo.text.replaceAll(',', ''))));
 
-                                          if(min==''){
-                                            rangominimo.text = "";
-                                          }
+                                        if(min==''){
+                                          rangominimo.text = "";
+                                        }
 
-                                          setState(() {
-                                            publicacionesBloc;
-                                          });
+                                        setState(() {
+                                          publicacionesBloc;
+                                        });
                                       },
                                       decoration: InputDecoration(
                                         hintText: '\$ 15.000',
@@ -539,32 +536,32 @@ class _PublicacionesState extends State<Publicaciones> {
                                     height: height*0.07,
                                     width: width*0.25,
                                     child:TextFormField(
-                                            keyboardType: TextInputType.number,
-                                            controller: rangomaximo,
-                                            inputFormatters: [
-                                              ThousandsFormatter(),
-                                            ],
-                                            onChanged: (max){
-                                              if(max==''){
-                                                rangomaximo.text = "10,000,000";
-                                                max = "10,000,000";
-                                              }
+                                      keyboardType: TextInputType.number,
+                                      controller: rangomaximo,
+                                      inputFormatters: [
+                                        ThousandsFormatter(),
+                                      ],
+                                      onChanged: (max){
+                                        if(max==''){
+                                          rangomaximo.text = "10,000,000";
+                                          max = "10,000,000";
+                                        }
 
-                                              publicacionesBloc.activarEvento.add(FiltrarPrecioMaximo(preciomaximo:  int.parse(rangomaximo.text.replaceAll(',', ''))));
+                                        publicacionesBloc.activarEvento.add(FiltrarPrecioMaximo(preciomaximo:  int.parse(rangomaximo.text.replaceAll(',', ''))));
 
-                                              if(rangomaximo.text=="10,000,000"){
-                                                rangomaximo.text = "";
-                                              }
+                                        if(rangomaximo.text=="10,000,000"){
+                                          rangomaximo.text = "";
+                                        }
 
-                                              setState(() {
-                                                publicacionesBloc;
-                                              });
+                                        setState(() {
+                                          publicacionesBloc;
+                                        });
 
-                                            },
-                                            decoration: InputDecoration(
-                                              hintText: '\$ 35.000',
-                                            ),
-                                          )
+                                      },
+                                      decoration: InputDecoration(
+                                        hintText: '\$ 35.000',
+                                      ),
+                                    )
                                 ),
                               ],
                             ),
@@ -688,7 +685,7 @@ class _PublicacionesState extends State<Publicaciones> {
                   itemExtent: _publicaciones.hasData ? height*0.21:height*0.8,
                   delegate: _publicaciones.hasData ? SliverChildBuilderDelegate(
 
-                    (BuildContext context, int index) {
+                        (BuildContext context, int index) {
 
                       return ListTile(
                           onTap: (){
@@ -703,7 +700,7 @@ class _PublicacionesState extends State<Publicaciones> {
                                 children: [
                                   Container(
                                     decoration: BoxDecoration(
-                                        //color: Colors.grey[500],
+                                      //color: Colors.grey[500],
                                         image: DecorationImage(image: NetworkImage(publicaciones[index].thumbnail),fit: BoxFit.contain)
                                     ),
                                     height: height*0.16,
@@ -762,9 +759,9 @@ class _PublicacionesState extends State<Publicaciones> {
                                                 String text = "";
 
                                                 for (var i = 0; i < tipos.length; i++) {
-                                                      if(publicaciones[index].listing_type_id == tipos[i].id){
-                                                        text = tipos[i].name;
-                                                      }
+                                                  if(publicaciones[index].listing_type_id == tipos[i].id){
+                                                    text = tipos[i].name;
+                                                  }
                                                 }
 
                                                 return  AutoSizeText(text,style: TextStyle(fontSize: 14,color: Colors.grey[700]),);
@@ -783,9 +780,9 @@ class _PublicacionesState extends State<Publicaciones> {
                     },
                     childCount: publicaciones.length,
                   ) : SliverChildBuilderDelegate(
-                      (BuildContext context, int index) {
+                          (BuildContext context, int index) {
                         return Center(
-                          child: CircularProgressIndicator(color: Colors.blue,),);
+                          child: CircularProgressIndicator(),);
                       },
                       childCount: 1
                   ),
